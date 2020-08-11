@@ -5,20 +5,24 @@
 const unsigned int MAXC = 60;
 const unsigned int MAXL = 20;
 
-enum Movimento {A = 8,S = 2 , D = 6, W = 8};
+enum Movimento {A = 8,S = 2 , D = 6, W = 8, Z = 0};
 typedef enum Movimento movimento;
 
 
-struct Cabeca_cobra {
+typedef struct cabeca{
 	int posx;
-	int poxy;
+	int posy;
+	struct cabeca *p;		//Por algum motivo, o typedef não funcionou para o ponteiro
 	movimento mov;
-};
+}Cabeca_cobra;
 
+void adicionarCorpo(Cabeca_cobra *cabeca){
+	Cabeca_cobra corpo = {cabeca->posx, cabeca->posy, NULL, 0 };
+	cabeca->p = &corpo;
+}
 
 //Falta - 1) Desenhar cobra; 2) Desenhar fruta
 void desenharTela(void){
-	
 	//************************************
 	//	TABULEIRO
 	//************************************
@@ -41,26 +45,62 @@ void desenharTela(void){
 			_gotoxy(MAXC+1, i);
 			printf("%c", '*');
 		}
-
-	//************************************
-	//	COBRA
-	//************************************
-
-	//************************************
-	//	FRUTO
-	//************************************
-	
 }
 
+void desenharCobra (Cabeca_cobra cobrinha){
+	_gotoxy(cobrinha.posx, cobrinha.posy);
+	printf("%c", (char)259);		//Cabeca
+	while (cobrinha.p != NULL){	//Corpo
+		cabeca *proximo = &(cobrinha.p);
+		int nx = cobrinha->p.posx;
+		int ny = cobrinha->p.posy;
+		_gotoxy(nx, ny);
+		printf("%c", (char)259);
+		
+	}
+	_gotoxy(cobrinha.posx, cobrinha.posy);
+	printf("%c", (char)259);	
+}
 
+void desenharFruto(){
+		
+}
 
+void lerMovimentoCobra (Cabeca_cobra *cobrinha){
+	switch(toupper(_getch())){
+		case 'A':
+			cobrinha->mov = 4;
+			break;
+		case 'D':
+			cobrinha->mov = 6;
+			break;
+		case 'S':
+			cobrinha->mov = 2;
+			break;
+		case 'W':
+			cobrinha->mov = 8;
+			break;
 
+		default: break;
+	}
+}
+
+void movimentarCobra (Cabeca_cobra *cobrinha){
+	switch(cobrinha->mov){
+		case 2: cobrinha->posy++; 	break;
+		case 4: cobrinha->posx--; 	break;
+		case 6: cobrinha->posx++; 	break;
+		case 8: cobrinha->posy--;	break;
+	}
+}
 
 int main(void){
-	desenharTela();
+	Cabeca_cobra cobrinha = {MAXC/2-1, MAXL/2-1,NULL,6 };
+	desenharTela(cobrinha);
 	while (1){
 		_clrscr();
-		desenharTela();
+
+		desenharTela(cobrinha);
 		_sleep(1);
 	}
 	puts("\n\n");
