@@ -9,5 +9,8 @@
 			<property name="Maximized" type="integer">1</property>
 			<property name="Active" type="integer">1</property>
 		</category>
+		<category name="Foldings">
+			<property name="Line1" type="integer">33</property>
+		</category>
 	</category>
 </settings>

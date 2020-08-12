@@ -7,13 +7,15 @@ POC_PROJECT_VERSION = 6.00#
 POC_PROJECT_TYPE = 3#
 POC_PROJECT_OUTPUTDIR = output#
 POC_PROJECT_RESULTDIR = .#
-POC_PROJECT_ARGUMENTS = #
+POC_PROJECT_ARGUMENTS = /Ze#
+POC_PROJECT_WORKPATH = #
+POC_PROJECT_EXECUTOR = #
 CC = pocc.exe#
 AS = poasm.exe#
 RC = porc.exe#
 LINK = polink.exe#
 SIGN = posign.exe#
-CCFLAGS = -Tx86-coff -Ot -W1 -Gd#
+CCFLAGS =  -Tx86-coff -Ot -Ob1 -fp:precise -W1 -Gd -Ze -Go #
 ASFLAGS = -AIA32 -Gd#
 RCFLAGS = -r#
 LINKFLAGS = -machine:ix86 -subsystem:console kernel32.lib advapi32.lib delayimp.lib#
@@ -34,5 +36,7 @@ SnakeGame.exe: \
 output\main.obj: \
 	main.c
 	$(CC) $(CCFLAGS) "$!" -Fo"$@"
+
+.EXCLUDEDFILES:
 
 .SILENT:
