@@ -12,13 +12,20 @@ const int SIMB_FRUTO = 184;
 enum Movimento {A = 8,S = 2 , D = 6, W = 8, Z = 0};
 typedef enum Movimento movimento;
 
+typedef struct corpo{
+	int posx;
+	int posy;
+	struct corpo *pt;
+}Corpo;
+
 typedef struct cabeca{
 	int posx;
 	int posy;
-	struct cabeca *p;		//Por algum motivo, o typedef não funcionou para o ponteiro
+	Corpo *p;		//Por algum motivo, o typedef não funcionou para o ponteiro
 	movimento mov;
 	int xPrev;
 	int yPrev;
+	unsigned int frutasComidas;
 }Cabeca_cobra;
 
 typedef struct fruto {
@@ -26,9 +33,23 @@ typedef struct fruto {
 	int posy;
 }Fruto;
 
-void adicionarCorpo(Cabeca_cobra *cabeca){
-	Cabeca_cobra corpo = {cabeca->posx, cabeca->posy, NULL, 0 };
+void gameOver(void){
+	printf("\n\n\n\n\nVoce perdeu!\n\n\n");
+}
+
+void adicionarCorpo_Cabeca(Cabeca_cobra *cabeca){
+	Corpo corpo = {cabeca->xPrev, cabeca->yPrev, NULL};
 	cabeca->p = &corpo;
+}
+
+void adicionarCorpo_Corpo(Corpo *corpo){
+	
+	
+}
+
+void desenharCoordenada(int x, int y, char simbolo){
+	_gotoxy(x,y);
+	printf("%c", simbolo);
 }
 
 //Substituir o "for" das linhas e colunas por strings de caracteres
@@ -36,20 +57,11 @@ void desenharTela(void){
 	//************************************
 	//	TABULEIRO
 	//************************************
-
-	//Obs: Quando escrevi o código achei bem trivial preencher as linhas e colunas. Código escrito em 10/08/2020.
-	//Um dia depois (11/08/2020) vim reler o código que escrevi para desenhar o tabuleiro...
-	//Sinceramente, não entendi o porquê dele funcionar.
-	//Teoricamente, seria necessário inserir o seguinte comando antes dos printf:
-	//		Ex:		_gotoxy(i,0);
-	//O comando acima informa que o cursor deve se posicionar na primeira linha do console, mudando apenas a coluna de acordo com "i"
-	//Porém parece que o "printf" imprime o texto na posição do cursor, e o que havia antes é empurrado para frente
-	//É um efeito não esperado do código
 	
 	//Desenhar primeira linha inteira
 		_gotoxy(0, 0);
-		for (int i = 0; i < MAXC; ++i)
-			printf("%c", '*');
+		for (int i = 0; i < MAXC/2-1; ++i)
+			printf("%c ", '*');
 
 	//Desenhar primeira coluna inteira
 		_gotoxy(0,0);
@@ -58,12 +70,12 @@ void desenharTela(void){
 
 	//Desenhar última linha inteira
 		_gotoxy(MAXL-1, 0);
-		for (int i = 0; i < MAXC; ++i)
-			printf("%c", '*');
+		for (int i = 0; i < MAXC/2; ++i)
+			printf("%c ", '*');
 
 	//Desenhar última coluna inteira
 		for (int i = 0; i <= MAXL; ++i){
-			_gotoxy(MAXC+1, i);		//Essa é a única linha lúcida no código, ela explica a lógica perfeitamente
+			_gotoxy(MAXC+1, i);		
 			printf("%c", '*');
 		}
 }
@@ -73,53 +85,61 @@ void apagarCoordenada (int x, int y){
 	printf("%c", ' ');
 }
 
+//Função pouco legível
 void desenharCobra (Cabeca_cobra cobrinha){
 	apagarCoordenada(cobrinha.xPrev, cobrinha.yPrev);
 	_gotoxy(cobrinha.posx, cobrinha.posy);
 	printf("%c", (char)SIMB_COBRA);		//Cabeca
-	while (cobrinha.p != NULL){	//Corpo			--- NÃO TESTADA
-		Cabeca_cobra temp = {(cobrinha.p)->posx, (cobrinha.p)->posy,(cobrinha.p)->p,0};
-		_gotoxy(temp.posx, temp.posy);
-		printf("%c", (char)SIMB_COBRA);
-	}
+	
+	//		IMPLEMENTAR LÓGICA DE LINKED LISTS	
+	
+
+	//Retoma ao normal
 	_gotoxy(cobrinha.posx, cobrinha.posy);
 	printf("%c", (char)SIMB_COBRA);	
 }
 
-void gerarFruto(Fruto *frutinha){
-	int randomX = rand()+2%MAXC-2; 
-	int randomY = rand()+2%MAXL-2;
-	_gotoxy(randomX, randomY);
+Fruto gerarFrutoInicial(void){
+	Fruto temp = {0,0};
+	do{
+		temp.posx = rand()%MAXC;
+		temp.posy = rand()%MAXL;
+	}while (temp.posx <= 1 || temp.posy <= 1 || temp.posx >= MAXC-1 || temp.posy >= MAXL-1 || (temp.posx == MAXC/2-1 && temp.posx == MAXL/2-1));
+	//A linha acima verifica se a Fruta Inicial não é gerada na mesma posição que a cobrinha começa
+	//Da mesma forma verifica se não é iniciada nas bordas
+	return temp;
+}
+
+void gerarFruto(Fruto *fruta, int xCobrinha, int yCobrinha){
+	apagarCoordenada(fruta->posx, fruta->posy);
+	do{
+		fruta->posx = rand()%MAXC;
+		fruta->posy = rand()%MAXL;
+	}while 		((fruta->posx == xCobrinha && fruta->posy == yCobrinha) 		|| 	/* Não gerar fruto em cima da cobrinha*/
+				(fruta->posx <= 1 || fruta ->posx == MAXC-1 						||	/* Não gerar fruto nas extremidades do eixo X*/
+ 				fruta->posy <= 1 || fruta ->posx == MAXL-1));							/* Não gerar fruto nas extremidades do eixo Y*/
+
+	_gotoxy(fruta->posx, fruta->posy);
 	printf("%c", SIMB_FRUTO);
-
-	frutinha->posx = randomX;
-	frutinha->posy = randomY;
 }
 
-_Bool baterParede(Cabeca_cobra *cobrinha){
-	if (cobrinha->posx <= 0 || cobrinha->posx >= MAXC)
-		 return 1;
-	if (cobrinha->posy <= 0 || cobrinha->posy >= MAXL)
-		return 1;
-	return 0;
+void baterParede(Cabeca_cobra *cobrinha, _Bool *gameOver){
+	//Os comentários abaixo são válidos enquanto a correção da renderização das bordas não for aplicada (ou seja, a coluna adicional não for removida)
+
+	//A primeira coluna é renderizada em X = 1
+	if (cobrinha->posx <= 1 || cobrinha->posx >= MAXC)		 *gameOver =  1;
+	//A primeira linha é renderizada em Y = 1 e a última linha é renderizada em Y = 21 
+	if (cobrinha->posy <=1 || cobrinha->posy > MAXL)  		 *gameOver =  1;
 }
 
-void lerMovimentoCobra (Cabeca_cobra *cobrinha){
+void lerMovimentoCobra (Cabeca_cobra *cobrinha, _Bool *gameOver){
 	switch(toupper(_getch())){
-		case 'A':
-			cobrinha->mov = 4;
-			break;
-		case 'D':
-			cobrinha->mov = 6;
-			break;
-		case 'S':
-			cobrinha->mov = 2;
-			break;
-		case 'W':
-			cobrinha->mov = 8;
-			break;
-
-		default: break;
+		case 'A':			cobrinha->mov = 4;				break;
+		case 'D':			cobrinha->mov = 6;				break;
+		case 'S':			cobrinha->mov = 2;				break;
+		case 'W':			cobrinha->mov = 8;				break;
+		case 'X':			*gameOver = 1;					break;
+		default: 												break;
 	}
 }
 
@@ -134,25 +154,53 @@ void movimentarCobra (Cabeca_cobra *cobrinha){
 	}
 }
 
-void gameOver(void){
-	printf("\n\n\n\n\nVoce perdeu!\n\n\n");
+void comerFruto (Cabeca_cobra *cobrinha, Fruto *frutinha){
+	//Quando as frutinhas são geradas em colunas pares, a cobrinha (que se movimenta de 2 em 2 no eixo X) não conseguia comer a fruta
+	//Logo é preciso verificar se a posição atual da cobrinha menos um contém a fruta (indicando que ela passou por cima)
+	if (
+		(
+			(cobrinha->posx == frutinha->posx) || (cobrinha->posx == frutinha->posx+1)
+		) 
+			&& cobrinha->posy == frutinha->posy
+	   )
+	{
+		cobrinha->frutasComidas++;
+		gerarFruto(frutinha, cobrinha->posx, cobrinha->posy);
+ 		if (cobrinha->p != NULL) adicionarCorpo_Cabeca(cobrinha);
+		else adicionarCorpo_Corpo(cobrinha->p);
+	}
+}
+
+void desenharInformacoes(Cabeca_cobra *cobrinha, Fruto *fruta){
+	_gotoxy(MAXC,MAXL+5);
+	printf("\nPosicao fruta:		X = %i		Y = %i\n", fruta->posx, fruta->posy);
+	printf("Posicao Cabeca: 	X = %i		Y = %i\n", cobrinha->posx,  cobrinha->posy);
+	printf("Frutinhas Comidas:  %i\n", cobrinha->frutasComidas);
+
 }
 
 int main(void){
 	srand(time(NULL));
-	Cabeca_cobra cobrinha = {MAXC/2-1, MAXL/2-1,NULL,6 ,0,0};
-	Fruto frutinha = {rand()+2%MAXC-2, rand()+2%MAXL-2};
+	Cabeca_cobra cobrinha = {MAXC/2-1, MAXL/2-1,NULL,6 ,0,0,0};
+	//Algumas vezes o fruto é gerado em cima das linhas e colunas limite ou fora delas, o que é um bug
+	//Aparentemente tem a ver com a forma de renderização da tela usando o _gotoxy e printf na função desenharTela()
+	//Corrigir depois.... 
+	
+	//Fruto fruta = {(rand()%MAXC), (rand()%MAXL)};		
+	Fruto fruta = gerarFrutoInicial();
 	desenharTela();
-	while (1){
+	desenharCoordenada(fruta.posx, fruta.posy, SIMB_FRUTO);
+	
+	_Bool game_over = 0;
+	while (!game_over){
+		desenharInformacoes(&cobrinha, &fruta);
 		desenharCobra(cobrinha);
-		lerMovimentoCobra(&cobrinha);
+		lerMovimentoCobra(&cobrinha, &game_over);
 		movimentarCobra(&cobrinha);
-		if (baterParede(&cobrinha))	{
-			gameOver();
-			break;					
-		}
-		Sleep(100);
+		baterParede(&cobrinha, &game_over);
+		comerFruto(&cobrinha, &fruta);
+		Sleep(50);
 	}
-	puts("\n\n");
+	puts("\n\nFim de Jogo!\n\n\n");
 	return 0;
 }

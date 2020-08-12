@@ -5,12 +5,17 @@
 			<property name="Left" type="integer">-8</property>
 			<property name="Top" type="integer">-31</property>
 			<property name="Right" type="integer">1246</property>
-			<property name="Bottom" type="integer">478</property>
+			<property name="Bottom" type="integer">407</property>
 			<property name="Maximized" type="integer">1</property>
 			<property name="Active" type="integer">1</property>
 		</category>
-		<category name="Foldings">
-			<property name="Line1" type="integer">33</property>
+		<category name="Breakpoints">
+			<category name="Breakpoint1">
+				<property name="Line" type="integer">46</property>
+				<property name="Enabled" type="integer">1</property>
+				<property name="HitCount" type="integer">0</property>
+				<property name="Expression" type="string"></property>
+			</category>
 		</category>
 	</category>
 </settings>
