@@ -3,6 +3,7 @@
 #include <conio.h>
 #include <time.h>
 #include <Windows.h>
+#include <string.h>
 
 const unsigned int MAXC = 60;
 const unsigned int MAXL = 20;
@@ -16,6 +17,7 @@ typedef struct corpo{
 	int posx;
 	int posy;
 	struct corpo *pt;
+	movimento mov;
 }Corpo;
 
 typedef struct cabeca{
@@ -38,13 +40,21 @@ void gameOver(void){
 }
 
 void adicionarCorpo_Cabeca(Cabeca_cobra *cabeca){
-	Corpo corpo = {cabeca->xPrev, cabeca->yPrev, NULL};
+	Corpo corpo = {cabeca->xPrev, cabeca->yPrev, NULL, cabeca->mov};
 	cabeca->p = &corpo;
 }
 
-void adicionarCorpo_Corpo(Corpo *corpo){
-	
-	
+void adicionarCorpo_Corpo(Cabeca_cobra *cabeca, Corpo *corpo){
+	int x = 0, y = 0;
+	switch(cabeca->mov){
+		case 8:			x = 1 + cabeca->posx;			break;
+		case 2:			x = 1 - cabeca->posx;			break;
+		case 6:			y = 1 + cabeca->posx;			break;
+		case 4:			y = 1 - cabeca->posy;			break;
+		case 0:			break;	
+	}
+	Corpo novoCorpo = {x,y,cabeca->p, corpo->mov};
+	cabeca->p = &novoCorpo;
 }
 
 void desenharCoordenada(int x, int y, char simbolo){
@@ -52,29 +62,24 @@ void desenharCoordenada(int x, int y, char simbolo){
 	printf("%c", simbolo);
 }
 
-//Substituir o "for" das linhas e colunas por strings de caracteres
 void desenharTela(void){
-	//************************************
-	//	TABULEIRO
-	//************************************
-	
 	//Desenhar primeira linha inteira
 		_gotoxy(0, 0);
-		for (int i = 0; i < MAXC/2-1; ++i)
+		for (unsigned int i = 0; i < MAXC/2-1; ++i)
 			printf("%c ", '*');
 
 	//Desenhar primeira coluna inteira
 		_gotoxy(0,0);
-		for (int i = 0; i < MAXL; ++i)
+		for (unsigned int i = 0; i < MAXL; ++i)
 			printf("%c\n", '*');
 
 	//Desenhar última linha inteira
 		_gotoxy(MAXL-1, 0);
-		for (int i = 0; i < MAXC/2; ++i)
+		for (unsigned int i = 0; i < MAXC/2; ++i)
 			printf("%c ", '*');
 
 	//Desenhar última coluna inteira
-		for (int i = 0; i <= MAXL; ++i){
+		for (unsigned int i = 0; i <= MAXL; ++i){
 			_gotoxy(MAXC+1, i);		
 			printf("%c", '*');
 		}
@@ -83,7 +88,7 @@ void desenharTela(void){
 void apagarCoordenada (int x, int y){
 	_gotoxy(x,y);
 	printf("%c", ' ');
-}
+}	
 
 //Função pouco legível
 void desenharCobra (Cabeca_cobra cobrinha){
@@ -151,6 +156,7 @@ void movimentarCobra (Cabeca_cobra *cobrinha){
 		case 4: cobrinha->posx -= 2; 	break;	//As linhas têm o dobro de espaçamento das colunas no console
 		case 6: cobrinha->posx += 2; 	break;	//Logo andar duas colunas por vez é a solução para manter a cobrinha uniforme
 		case 8: cobrinha->posy--;		break;
+		case 0: 						break;
 	}
 }
 
@@ -167,8 +173,17 @@ void comerFruto (Cabeca_cobra *cobrinha, Fruto *frutinha){
 		cobrinha->frutasComidas++;
 		gerarFruto(frutinha, cobrinha->posx, cobrinha->posy);
  		if (cobrinha->p != NULL) adicionarCorpo_Cabeca(cobrinha);
-		else adicionarCorpo_Corpo(cobrinha->p);
+		else adicionarCorpo_Corpo(cobrinha, cobrinha->p);
 	}
+}
+
+int desenharInfoCorpo(Cabeca_cobra *cobrinha, Corpo *corpo){
+	static unsigned int i =1;
+	if (cobrinha->p == NULL)	return 0;	//Só há a cabeça
+	/*while (corpo->pt != NULL){
+		desenharInfoCorpo(cobrinha, corpo->pt);
+	}*/
+	return 1;
 }
 
 void desenharInformacoes(Cabeca_cobra *cobrinha, Fruto *fruta){
@@ -176,17 +191,12 @@ void desenharInformacoes(Cabeca_cobra *cobrinha, Fruto *fruta){
 	printf("\nPosicao fruta:		X = %i		Y = %i\n", fruta->posx, fruta->posy);
 	printf("Posicao Cabeca: 	X = %i		Y = %i\n", cobrinha->posx,  cobrinha->posy);
 	printf("Frutinhas Comidas:  %i\n", cobrinha->frutasComidas);
-
+	//desenharInfoCorpo(cobrinha, cobrinha->p);
 }
 
 int main(void){
 	srand(time(NULL));
-	Cabeca_cobra cobrinha = {MAXC/2-1, MAXL/2-1,NULL,6 ,0,0,0};
-	//Algumas vezes o fruto é gerado em cima das linhas e colunas limite ou fora delas, o que é um bug
-	//Aparentemente tem a ver com a forma de renderização da tela usando o _gotoxy e printf na função desenharTela()
-	//Corrigir depois.... 
-	
-	//Fruto fruta = {(rand()%MAXC), (rand()%MAXL)};		
+	Cabeca_cobra cobrinha = {MAXC/2-1, MAXL/2-1,NULL,6 ,0,0,0};	
 	Fruto fruta = gerarFrutoInicial();
 	desenharTela();
 	desenharCoordenada(fruta.posx, fruta.posy, SIMB_FRUTO);
